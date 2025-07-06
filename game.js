@@ -219,6 +219,15 @@ let savedTotalDistance = 0; // 저장된 전체 거리 (재시작 시 유지)
 let bgMusicEnabled = true;
 let bgMusic = null;
 
+// FPS 제한 관련 변수
+let targetFPS = 60; // 기본 60FPS
+let frameTime = 1000 / targetFPS; // 목표 프레임 시간 (밀리초)
+let lastFrameTime = 0; // 마지막 프레임 시간
+let fpsCounter = 0; // FPS 카운터
+let currentFPS = 0; // 현재 FPS
+let fpsUpdateTimer = 0; // FPS 업데이트 타이머
+let deltaTime = 0; // 프레임 간 시간 차이 (초 단위)
+
 // 장애물 타입
 const OBSTACLE_TYPES = {
   SPIKE_SMALL: 'spike_small', // 작은 가시 (75x25)
@@ -797,14 +806,14 @@ function drawItemDisplay() {
   }
 }
 
-// 돈 부족 메시지 그리기
+  // 돈 부족 메시지 그리기
 function drawInsufficientFundsMessage() {
   if (!showInsufficientFunds) return;
   
-  insufficientFundsTimer++;
+  insufficientFundsTimer += deltaTime;
   
   // 3초 후 메시지 숨기기
-  if (insufficientFundsTimer > 180) { // 60fps * 3초
+  if (insufficientFundsTimer > 3.0) { // 3초
     showInsufficientFunds = false;
     return;
   }
@@ -848,10 +857,10 @@ function drawInsufficientFundsMessage() {
 function drawMaxHeartsMessage() {
   if (!showMaxHeartsMessage) return;
   
-  maxHeartsMessageTimer++;
+  maxHeartsMessageTimer += deltaTime;
   
   // 3초 후 메시지 숨기기
-  if (maxHeartsMessageTimer > 180) { // 60fps * 3초
+  if (maxHeartsMessageTimer > 3.0) { // 3초
     showMaxHeartsMessage = false;
     return;
   }
@@ -1243,9 +1252,9 @@ function updateDoor() {
     stageDoor.animationTimer = 0;
   }
   
-  // 문 열리는 애니메이션 (아래에서 위로)
+  // 문 열리는 애니메이션 (아래에서 위로) - deltaTime 사용
   if (stageDoor.isOpening) {
-    stageDoor.animationTimer += 0.03;
+    stageDoor.animationTimer += 0.03 * deltaTime;
     stageDoor.openHeight = Math.min(stageDoor.height, stageDoor.animationTimer * stageDoor.height);
     
     if (stageDoor.openHeight >= stageDoor.height) {
@@ -1290,8 +1299,8 @@ function drawCoin(coin) {
   ctx.save();
   ctx.translate(coin.x - cameraX, coin.y - coin.bounceHeight);
   
-  // 코인 애니메이션 (위아래로 살짝 움직임)
-  coin.animationTimer += 0.1;
+  // 코인 애니메이션 (위아래로 살짝 움직임) - deltaTime 사용
+  coin.animationTimer += 0.1 * deltaTime;
   coin.bounceHeight = Math.sin(coin.animationTimer) * 3;
   
   // 코인 배경 (원형)
@@ -1664,10 +1673,10 @@ function drawPlayer() {
   debugLog('[drawPlayer] player.x:', x, 'cameraX:', cameraX, 'renderX:', renderX);
   ctx.translate(renderX, y);
   
-  // 걷기 애니메이션 계산 (움직일 때만)
+  // 걷기 애니메이션 계산 (움직일 때만) - deltaTime 사용
   if (player.isOnGround && !player.isFalling) {
     if (Math.abs(player.vx) > 0) { // 움직일 때만 애니메이션
-      player.animationTimer += player.walkSpeed;
+      player.animationTimer += player.walkSpeed * deltaTime;
       player.legAngle = Math.sin(player.animationTimer) * 15; // 다리 움직임
       player.armAngle = Math.sin(player.animationTimer) * 10; // 팔 움직임
     } else {
@@ -1943,30 +1952,30 @@ function updatePlayer() {
 
   // 실제 거리 계산 (오른쪽으로 갈 때는 증가, 왼쪽으로 갈 때는 감소)
   if (keys['ArrowRight']) {
-    actualDistance += 1/60; // 60FPS 기준으로 1초에 1미터 증가
-    stageDistance += 1/60; // 스테이지 거리도 함께 증가
+    actualDistance += (1/60) * deltaTime; // deltaTime을 사용하여 프레임 독립적인 거리 계산
+    stageDistance += (1/60) * deltaTime; // 스테이지 거리도 함께 증가
   } else if (keys['ArrowLeft']) {
-    actualDistance -= 1/60; // 60FPS 기준으로 1초에 1미터 감소
-    stageDistance -= 1/60; // 스테이지 거리도 함께 감소
+    actualDistance -= (1/60) * deltaTime; // deltaTime을 사용하여 프레임 독립적인 거리 계산
+    stageDistance -= (1/60) * deltaTime; // 스테이지 거리도 함께 감소
   }
   
   // 거리가 음수가 되지 않도록 보호
   if (actualDistance < 0) actualDistance = 0;
   if (stageDistance < 0) stageDistance = 0;
 
-  // 무적 시간 처리
+  // 무적 시간 처리 (deltaTime 사용)
   if (player.invincible) {
-    player.invincibleTimer++;
-    if (player.invincibleTimer > 60) { // 1초 후 무적 해제
+    player.invincibleTimer += deltaTime;
+    if (player.invincibleTimer > 1.0) { // 1초 후 무적 해제
       player.invincible = false;
       player.invincibleTimer = 0;
     }
   }
 
-  // 화면 깜빡임 효과 처리
+  // 화면 깜빡임 효과 처리 (deltaTime 사용)
   if (screenFlash) {
-    screenFlashTimer++;
-    if (screenFlashTimer > 30) { // 0.5초 후 깜빡임 종료
+    screenFlashTimer += deltaTime;
+    if (screenFlashTimer > 0.5) { // 0.5초 후 깜빡임 종료
       screenFlash = false;
       screenFlashTimer = 0;
     }
@@ -2047,13 +2056,13 @@ function updatePlayer() {
     }
   }
 
-  // 떨어지는 애니메이션 처리
+  // 떨어지는 애니메이션 처리 (deltaTime 사용)
   if (player.isFalling) {
-    player.fallTimer++;
-    player.vy += 0.5; // 떨어지는 속도 증가
+    player.fallTimer += deltaTime;
+    player.vy += 0.5 * deltaTime; // 떨어지는 속도 증가 (프레임 독립적)
     
     // 충분히 떨어지면 바로 게임 오버 (하트 차감 없이)
-    if (player.fallTimer > 120) { // 2초 후
+    if (player.fallTimer > 2.0) { // 2초 후
       savedTotalDistance = actualDistance; // 게임 오버 시 전체 거리 저장
       gameOver = true; // 바로 게임 오버
     }
@@ -2172,6 +2181,15 @@ function drawUI() {
   // ctx.fillText('F1: +10 코인 | F2: 디버그 모드', canvas.width/2, canvas.height - 10);
   // ctx.textAlign = 'left';
   
+  // FPS 표시 (디버그 모드에서만)
+  if (debugMode) {
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.7)';
+    ctx.font = '14px Arial';
+    ctx.textAlign = 'right';
+    ctx.fillText(`FPS: ${currentFPS} (Target: ${targetFPS})`, canvas.width - 10, canvas.height - 10);
+    ctx.textAlign = 'left';
+  }
+  
   if (gameOver) {
     drawGameOverMenu();
   }
@@ -2230,6 +2248,20 @@ window.addEventListener('keydown', (e) => {
     e.preventDefault();
   }
 
+  if (e.code === 'F3') {
+    // FPS 조정 (30, 45, 60 순환)
+    if (targetFPS === 60) {
+      targetFPS = 30;
+    } else if (targetFPS === 30) {
+      targetFPS = 45;
+    } else {
+      targetFPS = 60;
+    }
+    frameTime = 1000 / targetFPS;
+    console.log(`FPS 설정: ${targetFPS}`);
+    e.preventDefault();
+  }
+
   // 게임 오버 메뉴 키 처리
   if (gameOver) {
     if (e.code === 'ArrowUp') {
@@ -2269,7 +2301,34 @@ window.addEventListener('click', (e) => {
   }
 });
 
-function gameLoop() {
+function gameLoop(currentTime) {
+  // FPS 제한 및 측정
+  if (lastFrameTime === 0) {
+    lastFrameTime = currentTime;
+  }
+  
+  const frameDeltaTime = currentTime - lastFrameTime;
+  
+  // 목표 프레임 시간보다 짧으면 다음 프레임까지 대기
+  if (frameDeltaTime < frameTime) {
+    requestAnimationFrame(gameLoop);
+    return;
+  }
+  
+  // FPS 측정
+  fpsCounter++;
+  fpsUpdateTimer += frameDeltaTime;
+  if (fpsUpdateTimer >= 1000) { // 1초마다 FPS 업데이트
+    currentFPS = fpsCounter;
+    fpsCounter = 0;
+    fpsUpdateTimer = 0;
+  }
+  
+  // deltaTime 계산 (초 단위, 60FPS 기준으로 정규화)
+  deltaTime = frameDeltaTime / 16.67; // 16.67ms = 60FPS의 한 프레임 시간
+  
+  lastFrameTime = currentTime;
+  
   // 플레이어 위치가 NaN인지 체크
   if (isNaN(player.x) || isNaN(player.y)) {
     debugError('[오류] gameLoop에서 플레이어 위치가 NaN입니다. 초기화합니다.');
@@ -2319,8 +2378,8 @@ function gameLoop() {
   
   // 화면 깜빡임 효과 그리기
   if (screenFlash) {
-    // 깜빡이는 효과 (빨간색 반투명 오버레이)
-    const flashAlpha = Math.sin(screenFlashTimer * 0.5) * 0.3 + 0.1; // 0.1 ~ 0.4 사이로 깜빡임
+    // 깜빡이는 효과 (빨간색 반투명 오버레이) - deltaTime 사용
+    const flashAlpha = Math.sin(screenFlashTimer * 2.0) * 0.3 + 0.1; // 0.1 ~ 0.4 사이로 깜빡임 (2.0으로 조정)
     ctx.fillStyle = `rgba(255, 0, 0, ${flashAlpha})`;
     ctx.fillRect(0, 0, canvas.width, canvas.height);
   }
@@ -2540,6 +2599,11 @@ initTouchControls();
 function detectMobileAndShowControls() {
   const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || 
                    (window.innerWidth <= 768 && window.innerHeight <= 1024);
+  
+  // 모든 기기에서 60FPS로 통일
+  targetFPS = 60;
+  frameTime = 1000 / targetFPS;
+  debugLog(`모든 기기에서 FPS ${targetFPS}로 설정`);
   
   if (isMobile) {
     showMobileControls();
