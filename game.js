@@ -1670,7 +1670,7 @@ function drawPlayer() {
   }
   const safeCameraX = Math.max(0, cameraX || 0);
   const renderX = x - cameraX;
-  debugLog('[drawPlayer] player.x:', x, 'cameraX:', cameraX, 'renderX:', renderX);
+  // debugLog('[drawPlayer] player.x:', x, 'cameraX:', cameraX, 'renderX:', renderX);
   ctx.translate(renderX, y);
   
   // 걷기 애니메이션 계산 (움직일 때만) - deltaTime 사용
@@ -1894,15 +1894,15 @@ function updatePlayer() {
   }
   
   // 좌우 이동 (플레이어가 직접 조작)
-  debugLog('[디버그] player.speed:', player.speed, 'playerItems.speedBonus:', playerItems.speedBonus);
+  // debugLog('[디버그] player.speed:', player.speed, 'playerItems.speedBonus:', playerItems.speedBonus);
   const speedBonus = 1 + ((playerItems.speedBonus || 0) / 100);
   const actualSpeed = (player.speed || 4) * speedBonus;
-  debugLog('[디버그] speedBonus:', speedBonus, 'actualSpeed:', actualSpeed);
+  // debugLog('[디버그] speedBonus:', speedBonus, 'actualSpeed:', actualSpeed);
   
   // 속도 계산이 NaN이 되지 않도록 보호
   if (isNaN(actualSpeed)) {
     debugError('[오류] 속도 계산이 NaN입니다. 기본값 사용.');
-    debugError('[디버그] player.speed:', player.speed, 'playerItems.speedBonus:', playerItems.speedBonus, 'speedBonus:', speedBonus);
+    // debugError('[디버그] player.speed:', player.speed, 'playerItems.speedBonus:', playerItems.speedBonus, 'speedBonus:', speedBonus);
     player.vx = 0;
   } else {
     if (keys['ArrowLeft']) {
@@ -1913,7 +1913,7 @@ function updatePlayer() {
       player.vx = 0;
     }
   }
-  debugLog('[이동] player.x:', player.x, 'player.vx:', player.vx, 'keys:', keys);
+  // debugLog('[이동] player.x:', player.x, 'player.vx:', player.vx, 'keys:', keys);
 
   
   // 점프 (문이 열려있지 않을 때만)
@@ -1937,9 +1937,9 @@ function updatePlayer() {
   if (player.x < 0) {
     player.x = 0;
     player.vx = 0;
-    debugLog('[x제한] player.x가 0보다 작아 제한됨:', player.x);
+    // debugLog('[x제한] player.x가 0보다 작아 제한됨:', player.x);
   }
-  debugLog('[이동후] player.x:', player.x, 'player.vx:', player.vx);
+  // debugLog('[이동후] player.x:', player.x, 'player.vx:', player.vx);
 
   // 카메라 계산 (NaN 방지)
   if (isNaN(player.x)) {
@@ -1948,7 +1948,7 @@ function updatePlayer() {
     player.vx = 0;
   }
   cameraX = Math.max(0, player.x - 200);
-  debugLog('[카메라] cameraX:', cameraX, 'player.x:', player.x);
+  // debugLog('[카메라] cameraX:', cameraX, 'player.x:', player.x);
 
   // 실제 거리 계산 (오른쪽으로 갈 때는 증가, 왼쪽으로 갈 때는 감소)
   if (keys['ArrowRight']) {
@@ -2451,6 +2451,7 @@ function swapMobileControls() {
 function updateMusicButtonState() {
   const musicBtn = document.getElementById('musicBtn');
   if (musicBtn) {
+    console.log('음악 버튼 상태 업데이트:', bgMusicEnabled);
     if (bgMusicEnabled) {
       musicBtn.textContent = '🎵';
       musicBtn.classList.remove('muted');
@@ -2458,6 +2459,8 @@ function updateMusicButtonState() {
       musicBtn.textContent = '🔇';
       musicBtn.classList.add('muted');
     }
+  } else {
+    console.error('updateMusicButtonState: 음악 버튼을 찾을 수 없습니다!');
   }
 }
 
@@ -2577,23 +2580,34 @@ function initTouchControls() {
   
   // 음악 버튼 이벤트
   if (musicBtn) {
+    console.log('음악 버튼 이벤트 리스너 등록');
     musicBtn.addEventListener('click', (e) => {
       e.preventDefault();
+      console.log('음악 버튼 클릭됨');
       toggleBgMusic();
       updateMusicButtonState();
     });
     
     musicBtn.addEventListener('touchstart', (e) => {
       e.preventDefault();
+      console.log('음악 버튼 터치됨');
       toggleBgMusic();
       updateMusicButtonState();
     });
+  } else {
+    console.error('음악 버튼을 찾을 수 없습니다!');
   }
 
 }
 
 // 터치 컨트롤 초기화
 initTouchControls();
+
+// 페이지 로드 완료 후 음악 버튼 초기화
+document.addEventListener('DOMContentLoaded', () => {
+  console.log('DOM 로드 완료, 음악 버튼 초기화');
+  updateMusicButtonState();
+});
 
 // 모바일 기기 감지 및 컨트롤 표시
 function detectMobileAndShowControls() {
@@ -2698,7 +2712,9 @@ function stopBgMusic() {
 
 // 배경음악 토글
 function toggleBgMusic() {
+  console.log('toggleBgMusic 호출됨, 현재 상태:', bgMusicEnabled);
   bgMusicEnabled = !bgMusicEnabled;
+  console.log('음악 상태 변경됨:', bgMusicEnabled);
   if (bgMusicEnabled) {
     startBgMusic();
   } else {
