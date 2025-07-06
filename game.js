@@ -216,7 +216,7 @@ let stageDistance = 0; // 현재 스테이지에서의 이동 거리 (미터 단
 let savedTotalDistance = 0; // 저장된 전체 거리 (재시작 시 유지)
 
 // 배경음악 관련 변수
-let bgMusicEnabled = true;
+let bgMusicEnabled = false; // 초기값을 false로 설정
 let bgMusic = null;
 
 // FPS 제한 관련 변수
@@ -446,7 +446,7 @@ function updateShop() {
 function drawHearts(x, y) {
   const heartSize = 20;
   const spacing = 25;
-  const boxWidth = 220;
+  const boxWidth = 264; // 220 * 1.2 = 264 (20% 증가)
   const boxHeight = 60;
   ctx.save();
   ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
@@ -558,14 +558,21 @@ function drawShopUI() {
     const itemY = itemStartY + i * itemHeight;
     const isSelected = i === selectedItem;
     
+    // 하트 아이템이 비활성화되어 있는지 확인
+    const isHeartDisabled = item.name === '하트' && hearts >= maxHearts;
+    
     // 선택된 아이템 하이라이트
     if (isSelected) {
       ctx.fillStyle = '#FFD700';
       ctx.fillRect(shopX + 10, itemY - 5, shopWidth - 20, itemHeight);
     }
     
-    // 아이템 배경
-    ctx.fillStyle = isSelected ? '#8B4513' : '#A0522D';
+    // 아이템 배경 (비활성화된 하트는 회색으로)
+    if (isHeartDisabled) {
+      ctx.fillStyle = isSelected ? '#666666' : '#444444';
+    } else {
+      ctx.fillStyle = isSelected ? '#8B4513' : '#A0522D';
+    }
     ctx.fillRect(shopX + 15, itemY, shopWidth - 30, itemHeight - 10);
     
     // 아이템 정보
@@ -581,11 +588,11 @@ function drawShopUI() {
     } else if (item.color) {
       ctx.fillStyle = item.color;
     } else {
-      ctx.fillStyle = '#FFFFFF';
+      ctx.fillStyle = isHeartDisabled ? '#888888' : '#FFFFFF';
     }
     ctx.fillText(item.icon, shopX + 25, itemY + 25);
     
-    ctx.fillStyle = '#FFFFFF';
+    ctx.fillStyle = isHeartDisabled ? '#888888' : '#FFFFFF';
     ctx.font = '18px Arial';
     ctx.fillText(item.name, shopX + 55, itemY + 20);
     
@@ -595,6 +602,14 @@ function drawShopUI() {
     ctx.font = '16px Arial';
     ctx.textAlign = 'right';
     ctx.fillText(`${item.price} 코인`, shopX + shopWidth - 25, itemY + 30);
+    
+    // 비활성화된 하트에 "최대" 표시
+    if (isHeartDisabled) {
+      ctx.fillStyle = '#FF0000';
+      ctx.font = '12px Arial';
+      ctx.textAlign = 'right';
+      ctx.fillText('최대', shopX + shopWidth - 25, itemY + 50);
+    }
     
     // 터치 영역 저장
     shopTouchAreas.push({
@@ -676,9 +691,9 @@ function handleShopTouch(x, y) {
 function drawCoinDisplay() {
   const totalCoins = totalCoinsCollected + coinsCollected;
   const coinSize = 25;
-  const startX = canvas.width - 230;
+  const startX = canvas.width - 276; // 230 * 1.2 = 276 (20% 증가)
   const startY = 120;
-  const boxWidth = 220;
+  const boxWidth = 264; // 220 * 1.2 = 264 (20% 증가)
   const boxHeight = 60;
   ctx.save();
   ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
@@ -727,81 +742,62 @@ function drawCoinDisplay() {
 
 // 아이템 표시 함수 (우측상단)
 function drawItemDisplay() {
-  const itemSize = 30;
-  const startX = canvas.width - 230;
-  const startY = 200;
-  let itemCount = 0;
-  if (playerItems.speedBonus > 0 || playerItems.heartBonus > 0) {
+  // 신발 아이템만 표시 (하트는 일회성 효과이므로 제외)
+  if (playerItems.speedBonus > 0) {
+    const itemSize = 30;
+    const startX = canvas.width - 276; // 230 * 1.2 = 276 (20% 증가)
+    const startY = 200;
+    
     ctx.save();
-    const boxWidth = 220;
+    const boxWidth = 264; // 220 * 1.2 = 264 (20% 증가)
     const boxHeight = 60;
     ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
     ctx.fillRect(startX - 20, startY - 20, boxWidth, boxHeight);
     ctx.strokeStyle = '#00FF00';
     ctx.lineWidth = 2;
     ctx.strokeRect(startX - 20, startY - 20, boxWidth, boxHeight);
-    if (playerItems.speedBonus > 0) {
-      const itemX = startX + itemCount * (itemSize + 120);
-      const centerY = startY + boxHeight / 2 - 18;
-      // 신발 아이콘
-      ctx.fillStyle = '#8B4513';
-      let shoeName = '신발';
-      if (playerItems.speedBonus >= 40) {
-        const colors = ['#FF0000', '#FF7F00', '#FFFF00', '#00FF00', '#0000FF', '#4B0082', '#9400D3'];
-        const colorIndex = Math.floor(Date.now() / 200) % colors.length;
-        ctx.fillStyle = colors[colorIndex];
-        shoeName = '전설신발';
-      } else if (playerItems.speedBonus >= 30) {
-        ctx.fillStyle = '#FFD700';
-        shoeName = '반짝반짝신발';
-      } else if (playerItems.speedBonus >= 20) {
-        ctx.fillStyle = '#C0C0C0';
-        shoeName = '반짝신발';
-      }
-      ctx.fillRect(itemX, centerY - itemSize / 2 + 2, itemSize, itemSize);
-      ctx.fillStyle = '#000000';
-      ctx.font = '24px Arial';
-      ctx.textAlign = 'center';
-      ctx.textBaseline = 'alphabetic';
-      ctx.fillText('👟', itemX + itemSize / 2, centerY + 10);
-      // 신발 이름 크게
-      ctx.fillStyle = '#FFFFFF';
-      ctx.font = 'bold 18px Arial';
-      ctx.textAlign = 'left';
-      ctx.textBaseline = 'alphabetic';
-      const nameX = itemX + itemSize + 5;
-      const nameY = centerY + 10;
-      ctx.fillText(shoeName, nameX, nameY);
-      // 효과를 이름 우측에 표시
-      ctx.font = '14px Arial';
-      ctx.fillStyle = '#00FF00';
-      const nameWidth = ctx.measureText(shoeName).width;
-      ctx.fillText(`+${playerItems.speedBonus}% 속도`, nameX + nameWidth + 10, nameY);
-      itemCount++;
+    
+    const itemX = startX;
+    const centerY = startY + boxHeight / 2 - 18;
+    
+    // 신발 아이콘
+    ctx.fillStyle = '#8B4513';
+    let shoeName = '신발';
+    if (playerItems.speedBonus >= 40) {
+      const colors = ['#FF0000', '#FF7F00', '#FFFF00', '#00FF00', '#0000FF', '#4B0082', '#9400D3'];
+      const colorIndex = Math.floor(Date.now() / 200) % colors.length;
+      ctx.fillStyle = colors[colorIndex];
+      shoeName = '전설신발';
+    } else if (playerItems.speedBonus >= 30) {
+      ctx.fillStyle = '#FFD700';
+      shoeName = '반짝반짝신발';
+    } else if (playerItems.speedBonus >= 20) {
+      ctx.fillStyle = '#C0C0C0';
+      shoeName = '반짝신발';
     }
-    if (playerItems.heartBonus > 0) {
-      const itemX = startX + itemCount * (itemSize + 40);
-      const centerY = startY + boxHeight / 2 - 18;
-      ctx.fillStyle = '#FFFFFF';
-      ctx.font = '24px Arial';
-      ctx.textAlign = 'center';
-      ctx.textBaseline = 'alphabetic';
-      ctx.fillText('❤️', itemX + itemSize / 2, centerY + 10);
-      // 하트 이름(고정)
-      ctx.fillStyle = '#FFFFFF';
-      ctx.font = 'bold 18px Arial';
-      ctx.textAlign = 'left';
-      ctx.textBaseline = 'alphabetic';
-      const nameX = itemX + itemSize + 5;
-      const nameY = centerY + 10;
-      ctx.fillText('하트', nameX, nameY);
-      // 효과를 이름 우측에 표시
-      ctx.font = '14px Arial';
-      ctx.fillStyle = '#FF0000';
-      const nameWidth = ctx.measureText('하트').width;
-      ctx.fillText(`+${playerItems.heartBonus}`, nameX + nameWidth + 10, nameY);
-      itemCount++;
-    }
+    
+    ctx.fillRect(itemX, centerY - itemSize / 2 + 2, itemSize, itemSize);
+    ctx.fillStyle = '#000000';
+    ctx.font = '24px Arial';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'alphabetic';
+    ctx.fillText('👟', itemX + itemSize / 2, centerY + 10);
+    
+    // 신발 이름 크게
+    ctx.fillStyle = '#FFFFFF';
+    ctx.font = 'bold 18px Arial';
+    ctx.textAlign = 'left';
+    ctx.textBaseline = 'alphabetic';
+    const nameX = itemX + itemSize + 5;
+    const nameY = centerY + 10;
+    ctx.fillText(shoeName, nameX, nameY);
+    
+    // 효과를 이름 우측에 표시 (더 넓은 간격)
+    ctx.font = '14px Arial';
+    ctx.fillStyle = '#00FF00';
+    const nameWidth = ctx.measureText(shoeName).width;
+    ctx.fillText(`+${playerItems.speedBonus}% 속도`, nameX + nameWidth + 35, nameY); // 20 → 35로 간격 증가
+    
     ctx.restore();
   }
 }
@@ -810,10 +806,10 @@ function drawItemDisplay() {
 function drawInsufficientFundsMessage() {
   if (!showInsufficientFunds) return;
   
-  insufficientFundsTimer += deltaTime;
+  insufficientFundsTimer += 1; // 프레임 카운트 증가
   
-  // 3초 후 메시지 숨기기
-  if (insufficientFundsTimer > 3.0) { // 3초
+  // 180프레임(3초) 후 메시지 숨기기
+  if (insufficientFundsTimer >= 180) { // 60프레임 * 3초 = 180프레임
     showInsufficientFunds = false;
     return;
   }
@@ -857,10 +853,10 @@ function drawInsufficientFundsMessage() {
 function drawMaxHeartsMessage() {
   if (!showMaxHeartsMessage) return;
   
-  maxHeartsMessageTimer += deltaTime;
+  maxHeartsMessageTimer += 1; // 프레임 카운트 증가
   
-  // 3초 후 메시지 숨기기
-  if (maxHeartsMessageTimer > 3.0) { // 3초
+  // 180프레임(3초) 후 메시지 숨기기
+  if (maxHeartsMessageTimer >= 180) { // 60프레임 * 3초 = 180프레임
     showMaxHeartsMessage = false;
     return;
   }
@@ -1266,6 +1262,12 @@ function updateDoor() {
 
 // 코인 생성
 function createCoin(x) {
+  // NaN 체크
+  if (isNaN(x)) {
+    console.error(`[ERROR] createCoin에서 NaN 감지 - x: ${x}`);
+    return;
+  }
+  
   const coin = {
     x: x,
     y: getGroundY() - 60, // 땅에서 더 높게 위치 (플레이어 머리 높이 고려)
@@ -1275,7 +1277,15 @@ function createCoin(x) {
     animationTimer: 0,
     bounceHeight: 0
   };
+  
+  // 코인 위치가 유효한지 확인
+  if (isNaN(coin.x) || isNaN(coin.y)) {
+    console.error(`[ERROR] 코인 객체 생성 오류 - x: ${coin.x}, y: ${coin.y}`);
+    return;
+  }
+  
   stageCoins.push(coin);
+  console.log(`[DEBUG] 코인 객체 생성 완료 - 위치: (${coin.x}, ${coin.y})`);
 }
 
 // 지정된 높이에 코인 생성
@@ -1295,6 +1305,17 @@ function createCoinAtHeight(x, y) {
 // 코인 그리기
 function drawCoin(coin) {
   if (coin.collected) return;
+  
+  // NaN 체크
+  if (isNaN(coin.x) || isNaN(coin.y) || isNaN(cameraX)) {
+    console.error(`[ERROR] drawCoin에서 NaN 감지 - coin.x: ${coin.x}, coin.y: ${coin.y}, cameraX: ${cameraX}`);
+    return;
+  }
+  
+  // 초기 로딩 시 안전장치: 카메라가 아직 설정되지 않았으면 건너뛰기
+  if (cameraX === 0 && coin.x < 200) {
+    return; // 초기 로딩 시 화면 밖의 코인은 그리지 않음
+  }
   
   ctx.save();
   ctx.translate(coin.x - cameraX, coin.y - coin.bounceHeight);
@@ -1414,64 +1435,68 @@ function initializeStage(stage) {
   // 문을 먼저 생성 (장애물 생성 전에)
   createStageDoor(doorX);
   
-  // 코인 생성 (실제로 생성된 장애물 개수와 동일한 개수)
-  const coinCount = actualObstaclesCreated; // 실제로 생성된 장애물 개수와 동일한 코인 개수
-  let coinX = player.x + 350; // 코인 시작 위치 조정 (상점과의 간격 고려)
+  // 코인 생성 (더 간단한 버전)
+  const coinCount = Math.max(2, actualObstaclesCreated); // 최소 2개는 생성
+  console.log(`[DEBUG] 코인 생성 시작 - 목표 개수: ${coinCount}`);
+  
+  let coinsCreated = 0;
+  
+  // 다양한 위치에 코인 생성 (장애물 근처에서는 장애물 위에)
+  const coinSpacing = 200 + Math.random() * 200; // 200-400픽셀 랜덤 간격
+  let coinX = player.x + 600 + Math.random() * 200; // 첫 번째 코인 위치에 랜덤성 추가
+  
+  // 초기 로딩 시 안전장치: 플레이어 위치가 너무 작으면 조정
+  if (coinX < 700) { // 최소 700픽셀 이상 떨어져야 함
+    coinX = 700 + Math.random() * 100;
+    console.log(`[DEBUG] 초기 로딩 시 코인 위치 조정: ${coinX}`);
+  }
+  
+  console.log(`[DEBUG] 코인 생성 시작 위치: ${coinX}, 간격: ${coinSpacing}, 플레이어 위치: ${player.x}`);
   
   for (let i = 0; i < coinCount; i++) {
-    // 코인이 문보다 뒤에 생성되지 않도록 체크 (문 앞 1미터 제한)
-    if (coinX >= doorX - 240) { // 문 앞 1미터 = 240픽셀 여유 공간
+    // NaN 체크
+    if (isNaN(coinX) || isNaN(doorX)) {
+      console.error(`[ERROR] 코인 ${i+1} 생성 중 NaN 감지 - coinX: ${coinX}, doorX: ${doorX}`);
       break;
     }
     
-    // 상점과 겹치는지 체크
-    let isNearShop = false;
-    if (stageShop) {
-      const shopLeft = stageShop.x - stageShop.width/2;
-      const shopRight = stageShop.x + stageShop.width/2;
-      if (coinX > shopLeft - 30 && coinX < shopRight + 30) { // 30픽셀 여유 공간
-        isNearShop = true;
-      }
+    // 코인이 문보다 뒤에 생성되지 않도록 체크
+    if (coinX >= doorX - 300) {
+      console.log(`[DEBUG] 코인 ${i+1}: 문 앞 제한으로 중단. coinX: ${coinX}, doorX: ${doorX}`);
+      break;
     }
     
-    // 문과 겹치는지 체크
-    let isNearDoor = false;
-    if (stageDoor) {
-      const doorLeft = stageDoor.x - stageDoor.width/2;
-      const doorRight = stageDoor.x + stageDoor.width/2;
-      if (coinX > doorLeft - 30 && coinX < doorRight + 30) { // 30픽셀 여유 공간
-        isNearDoor = true;
-      }
-    }
+    // 장애물 근처에 있는지 확인
+    let coinY = getGroundY() - 60; // 기본 높이 (땅에서 60픽셀 위)
+    let isNearObstacle = false;
     
-    // 상점이나 문과 겹치지 않는 경우에만 코인 생성
-    if (!isNearShop && !isNearDoor) {
-      // 장애물 근처에 있는지 확인
-      let isNearObstacle = false;
-      let nearestObstacle = null;
-      let minDistance = Infinity;
-      
-      for (let obstacle of stageObstacles) {
-        const distance = Math.abs(obstacle.x - coinX);
-        if (distance < 150 && distance < minDistance) { // 150픽셀 이내에 장애물이 있으면
-          isNearObstacle = true;
-          nearestObstacle = obstacle;
-          minDistance = distance;
+    for (let obstacle of stageObstacles) {
+      const obstacleDistance = Math.abs(coinX - obstacle.x);
+      if (obstacleDistance < 100) { // 장애물 100픽셀 이내에 있으면
+        isNearObstacle = true;
+        // 장애물 위에 코인 생성 (장애물 타입에 따라 높이 조정)
+        if (obstacle.type === OBSTACLE_TYPES.TRAP) {
+          coinY = getGroundY() - 80; // 함정 위 (약간 높게)
+        } else if (obstacle.type === OBSTACLE_TYPES.SPIKE_SMALL) {
+          coinY = getGroundY() - 100; // 작은 가시 위 (더 높게)
+        } else if (obstacle.type === OBSTACLE_TYPES.SPIKE_LARGE) {
+          coinY = getGroundY() - 120; // 큰 가시 위 (가장 높게)
         }
-      }
-      
-      if (isNearObstacle && nearestObstacle) {
-        // 장애물 근처에 있으면 점프했을 때 먹을 수 있는 높이에 배치
-        const jumpHeight = getGroundY() - 100; // 점프 최고점 근처 (플레이어 머리 높이 고려)
-        createCoinAtHeight(coinX + Math.random() * 200, jumpHeight);
-      } else {
-        // 일반적인 위치에 배치
-        createCoin(coinX + Math.random() * 200);
+        console.log(`[DEBUG] 코인 ${i+1} 장애물 위에 생성. 장애물 타입: ${obstacle.type}, 높이: ${coinY}`);
+        break;
       }
     }
-      
-    coinX += Math.random() * 300 + 200;
+    
+    // 코인 생성 (높이 지정)
+    createCoinAtHeight(coinX, coinY);
+    console.log(`[DEBUG] 코인 ${i+1} 생성 성공. 위치: (${coinX}, ${coinY}), 장애물 근처: ${isNearObstacle}`);
+    coinsCreated++;
+    
+    // 다음 코인 위치 계산 (랜덤성 추가)
+    coinX += coinSpacing + Math.random() * 100; // 기본 간격 + 0-100픽셀 랜덤
   }
+  
+  console.log(`[DEBUG] 스테이지 ${stage} - 목표 코인: ${coinCount}, 실제 생성: ${coinsCreated}`);
 }
 
 // 스테이지 클리어 체크 (스페이스키로 다음 스테이지 이동)
@@ -1673,6 +1698,8 @@ function drawPlayer() {
   // debugLog('[drawPlayer] player.x:', x, 'cameraX:', cameraX, 'renderX:', renderX);
   ctx.translate(renderX, y);
   
+  // 무적 상태일 때는 시각적 효과 없음 (전체 화면 깜빡임으로 대체)
+  
   // 걷기 애니메이션 계산 (움직일 때만) - deltaTime 사용
   if (player.isOnGround && !player.isFalling) {
     if (Math.abs(player.vx) > 0) { // 움직일 때만 애니메이션
@@ -1859,7 +1886,7 @@ function checkSpikeCollision(player, spikeObstacle) {
 
 
 
-// 코인 충돌 체크 (얼굴까지 포함)
+// 코인 충돌 체크 (높이에 따른 획득 가능 여부 체크)
 function checkCoinCollision(player, coin) {
   // 플레이어의 전체 높이 (머리 포함)를 고려한 충돌 판정
   const playerTop = player.y - player.height/2 - player.width/4; // 머리까지 포함
@@ -1873,11 +1900,31 @@ function checkCoinCollision(player, coin) {
   const coinLeft = coin.x - coin.width/2;
   const coinRight = coin.x + coin.width/2;
   
-  // 사각형 충돌 판정
-  return playerRight > coinLeft && 
-         playerLeft < coinRight && 
-         playerBottom > coinTop && 
-         playerTop < coinBottom;
+  // 기본 사각형 충돌 판정
+  const basicCollision = playerRight > coinLeft && 
+                        playerLeft < coinRight && 
+                        playerBottom > coinTop && 
+                        playerTop < coinBottom;
+  
+  if (!basicCollision) return false;
+  
+  // 높이에 따른 획득 가능 여부 체크
+  const groundY = getGroundY();
+  const coinHeightFromGround = groundY - coin.y;
+  
+  // 코인이 땅에서 80픽셀 이상 높이에 있으면 점프가 필요
+  if (coinHeightFromGround > 80) {
+    // 점프 중이거나 충분히 높이 있을 때만 획득 가능
+    const playerHeightFromGround = groundY - player.y;
+    const requiredHeight = coinHeightFromGround - 20; // 코인보다 20픽셀 낮아도 획득 가능
+    
+    if (playerHeightFromGround < requiredHeight) {
+      // 점프가 부족한 경우 획득 불가
+      return false;
+    }
+  }
+  
+  return true;
 }
 
 function updatePlayer() {
@@ -1963,19 +2010,20 @@ function updatePlayer() {
   if (actualDistance < 0) actualDistance = 0;
   if (stageDistance < 0) stageDistance = 0;
 
-  // 무적 시간 처리 (deltaTime 사용)
+  // 무적 시간 처리 (60프레임 기준 1초)
   if (player.invincible) {
-    player.invincibleTimer += deltaTime;
-    if (player.invincibleTimer > 1.0) { // 1초 후 무적 해제
+    player.invincibleTimer += 1; // 프레임 카운트 증가
+    if (player.invincibleTimer >= 60) { // 60프레임 = 1초 후 무적 해제
+      console.log(`[DEBUG] 무적 상태 해제. 무적 프레임: ${player.invincibleTimer}`);
       player.invincible = false;
       player.invincibleTimer = 0;
     }
   }
 
-  // 화면 깜빡임 효과 처리 (deltaTime 사용)
+  // 화면 깜빡임 효과 처리 (60프레임 기준)
   if (screenFlash) {
-    screenFlashTimer += deltaTime;
-    if (screenFlashTimer > 0.5) { // 0.5초 후 깜빡임 종료
+    screenFlashTimer += 1; // 프레임 카운트 증가
+    if (screenFlashTimer >= 60) { // 60프레임(1초) 후 깜빡임 종료
       screenFlash = false;
       screenFlashTimer = 0;
     }
@@ -2013,6 +2061,13 @@ function updatePlayer() {
       coin.collected = true;
       coinsCollected++;
       playCoinSound();
+      
+      // 디버그: 높은 코인 획득 시 로그
+      const groundY = getGroundY();
+      const coinHeightFromGround = groundY - coin.y;
+      if (coinHeightFromGround > 80) {
+        console.log(`[DEBUG] 높은 코인 획득! 코인 높이: ${coinHeightFromGround}픽셀`);
+      }
     }
   }
 
@@ -2021,16 +2076,20 @@ function updatePlayer() {
     if (obstacle.type === OBSTACLE_TYPES.SPIKE_SMALL || obstacle.type === OBSTACLE_TYPES.SPIKE_LARGE) {
       // 가시장애물은 특별한 충돌 판정 사용 (무적 상태가 아닐 때만)
       if (!player.invincible && checkSpikeCollision(player, obstacle)) {
+        console.log(`[DEBUG] 가시함정 충돌! 현재 하트: ${hearts} -> ${hearts - 1}`);
         hearts--; // 하트 감소
         if (hearts <= 0) {
+          console.log(`[DEBUG] 하트가 0이 되어 게임 오버!`);
           savedTotalDistance = actualDistance; // 게임 오버 시 전체 거리 저장
           gameOver = true;
         } else {
+          console.log(`[DEBUG] 하트 차감 완료. 남은 하트: ${hearts}`);
           // 하트가 남아있으면 하트만 차감하고 현재 위치 유지
           // 플레이어 위치는 리셋하지 않음
           // 잠시 무적 시간을 주어 연속 충돌 방지
           player.invincible = true;
           player.invincibleTimer = 0;
+          console.log(`[DEBUG] 무적 상태 활성화. 60프레임(1초)간 무적`);
           
           // 화면 깜빡임 효과 시작
           screenFlash = true;
@@ -2133,7 +2192,7 @@ function drawUI() {
   ctx.fillText(`Obstacles: ${stageObstacles.length}`, 20, 160);
   
   // 우측상단 하트 표시
-  drawHearts(canvas.width - 230, 40);
+  drawHearts(canvas.width - 276, 40); // 230 * 1.2 = 276 (20% 증가)
   
   // 우측상단 코인 표시
   drawCoinDisplay();
@@ -2174,12 +2233,7 @@ function drawUI() {
     ctx.textAlign = 'left';
   }
   
-  // 치트키 안내 (화면 하단에 작게 표시)
-  // ctx.fillStyle = 'rgba(255, 255, 255, 0.5)';
-  // ctx.font = '12px Arial';
-  // ctx.textAlign = 'center';
-  // ctx.fillText('F1: +10 코인 | F2: 디버그 모드', canvas.width/2, canvas.height - 10);
-  // ctx.textAlign = 'left';
+
   
   // FPS 표시 (디버그 모드에서만)
   if (debugMode) {
@@ -2196,9 +2250,9 @@ function drawUI() {
 }
 
 window.addEventListener('keydown', (e) => {
-  // 첫 번째 키 입력 시 배경음악 시작 (더 확실한 방법)
+  // 첫 번째 키 입력 시 배경음악 시작 (사용자 상호작용 후)
   if (!bgMusic && bgMusicEnabled) {
-    debugLog('배경음악 시작 시도...');
+    debugLog('키 입력으로 배경음악 시작 시도...');
     startBgMusic();
   }
   
@@ -2231,13 +2285,6 @@ window.addEventListener('keydown', (e) => {
   if (e.code === 'Space' && nearShop) {
     shopOpen = true; // 상점 열기
     hideMobileControls(); // 모바일 컨트롤 숨기기
-    e.preventDefault();
-  }
-
-  if (e.code === 'F1') {
-    // F1 치트키: 10코인 추가
-    coinsCollected += 10;
-    console.log(`[치트키] 10코인 추가! 현재 스테이지 코인: ${coinsCollected}, 전체 코인: ${totalCoinsCollected + coinsCollected}`);
     e.preventDefault();
   }
 
@@ -2297,6 +2344,17 @@ window.addEventListener('click', (e) => {
   
   if (!bgMusic && bgMusicEnabled) {
     debugLog('마우스 클릭으로 배경음악 시작 시도...');
+    startBgMusic();
+  }
+});
+
+// 터치 이벤트로도 음악 시작
+window.addEventListener('touchstart', (e) => {
+  // 캔버스 터치는 점프용이므로 음악 시작하지 않음
+  if (e.target === canvas) return;
+  
+  if (!bgMusic && bgMusicEnabled) {
+    debugLog('터치로 배경음악 시작 시도...');
     startBgMusic();
   }
 });
@@ -2378,8 +2436,8 @@ function gameLoop(currentTime) {
   
   // 화면 깜빡임 효과 그리기
   if (screenFlash) {
-    // 깜빡이는 효과 (빨간색 반투명 오버레이) - deltaTime 사용
-    const flashAlpha = Math.sin(screenFlashTimer * 2.0) * 0.3 + 0.1; // 0.1 ~ 0.4 사이로 깜빡임 (2.0으로 조정)
+    // 깜빡이는 효과 (빨간색 반투명 오버레이) - 60프레임 기준
+    const flashAlpha = Math.sin(screenFlashTimer * 0.2) * 0.4 + 0.1; // 0.1 ~ 0.5 사이로 깜빡임 (더 강하게)
     ctx.fillStyle = `rgba(255, 0, 0, ${flashAlpha})`;
     ctx.fillRect(0, 0, canvas.width, canvas.height);
   }
@@ -2387,11 +2445,19 @@ function gameLoop(currentTime) {
   requestAnimationFrame(gameLoop);
 }
 
-// 초기 스테이지 시작
-initializeStage(currentStage);
+// 초기 스테이지 시작 (플레이어 위치 확실히 설정 후)
+setTimeout(() => {
+  // 플레이어 위치가 확실히 설정되었는지 확인
+  if (isNaN(player.x)) {
+    player.x = 100;
+    player.vx = 0;
+  }
+  console.log(`[DEBUG] 초기 스테이지 시작 - 플레이어 위치: ${player.x}`);
+  initializeStage(currentStage);
+}, 100); // 100ms 지연으로 플레이어 위치 확실히 설정
 
-// 배경음악 시작
-startBgMusic();
+// 배경음악은 사용자 상호작용 후에만 시작하도록 변경
+// startBgMusic(); // 자동 시작 제거
 
 // 모바일 컨트롤 표시/숨김 함수
 function showMobileControls() {
@@ -2451,16 +2517,13 @@ function swapMobileControls() {
 function updateMusicButtonState() {
   const musicBtn = document.getElementById('musicBtn');
   if (musicBtn) {
-    console.log('음악 버튼 상태 업데이트:', bgMusicEnabled);
     if (bgMusicEnabled) {
-      musicBtn.textContent = '🎵';
+      musicBtn.textContent = '🔇'; // 음악이 켜져있으면 끄기 아이콘 표시
       musicBtn.classList.remove('muted');
     } else {
-      musicBtn.textContent = '🔇';
+      musicBtn.textContent = '🎵'; // 음악이 꺼져있으면 켜기 아이콘 표시
       musicBtn.classList.add('muted');
     }
-  } else {
-    console.error('updateMusicButtonState: 음악 버튼을 찾을 수 없습니다!');
   }
 }
 
@@ -2580,22 +2643,17 @@ function initTouchControls() {
   
   // 음악 버튼 이벤트
   if (musicBtn) {
-    console.log('음악 버튼 이벤트 리스너 등록');
     musicBtn.addEventListener('click', (e) => {
       e.preventDefault();
-      console.log('음악 버튼 클릭됨');
       toggleBgMusic();
       updateMusicButtonState();
     });
     
     musicBtn.addEventListener('touchstart', (e) => {
       e.preventDefault();
-      console.log('음악 버튼 터치됨');
       toggleBgMusic();
       updateMusicButtonState();
     });
-  } else {
-    console.error('음악 버튼을 찾을 수 없습니다!');
   }
 
 }
@@ -2605,7 +2663,6 @@ initTouchControls();
 
 // 페이지 로드 완료 후 음악 버튼 초기화
 document.addEventListener('DOMContentLoaded', () => {
-  console.log('DOM 로드 완료, 음악 버튼 초기화');
   updateMusicButtonState();
 });
 
@@ -2674,10 +2731,14 @@ function playCoinSound() {
 
 // 배경음악 시작
 function startBgMusic() {
-  if (!bgMusicEnabled) return;
+  if (!bgMusicEnabled) {
+    return;
+  }
   
   // 이미 음악이 재생 중이면 중복 생성하지 않음
-  if (bgMusic) return;
+  if (bgMusic) {
+    return;
+  }
   
   bgMusic = new Audio('./music/exploration-chiptune-rpg-adventure-theme-336428.mp3');
   bgMusic.loop = true; // 반복 재생
@@ -2685,20 +2746,22 @@ function startBgMusic() {
   
   // 음악 로딩 완료 후 재생
   bgMusic.addEventListener('canplaythrough', () => {
-    bgMusic.play().catch(e => {
-      debugLog('음악 재생 실패:', e);
-      // 재생 실패 시 다시 시도
-      setTimeout(() => {
-        if (bgMusicEnabled && bgMusic) {
-          bgMusic.play().catch(e2 => debugLog('음악 재생 재시도 실패:', e2));
-        }
-      }, 1000);
-    });
+    // bgMusic이 null이 아니고 음악이 활성화되어 있을 때만 재생
+    if (bgMusic && bgMusicEnabled) {
+      // 사용자 상호작용 후에만 재생 시도
+      const playPromise = bgMusic.play();
+      if (playPromise !== undefined) {
+        playPromise.catch(e => {
+          // 재생 실패 시 음악 객체 정리
+          bgMusic = null;
+        });
+      }
+    }
   });
   
   // 음악 로딩 실패 시 처리
   bgMusic.addEventListener('error', (e) => {
-    debugLog('음악 로딩 실패:', e);
+    bgMusic = null;
   });
 }
 
@@ -2707,15 +2770,15 @@ function stopBgMusic() {
   if (bgMusic) {
     bgMusic.pause();
     bgMusic.currentTime = 0;
+    // bgMusic = null; // null로 설정하지 않고 그대로 유지
   }
 }
 
 // 배경음악 토글
 function toggleBgMusic() {
-  console.log('toggleBgMusic 호출됨, 현재 상태:', bgMusicEnabled);
   bgMusicEnabled = !bgMusicEnabled;
-  console.log('음악 상태 변경됨:', bgMusicEnabled);
   if (bgMusicEnabled) {
+    // 음악을 켤 때는 즉시 시작 (사용자 상호작용 후이므로 가능)
     startBgMusic();
   } else {
     stopBgMusic();
