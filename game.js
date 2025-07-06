@@ -426,7 +426,10 @@ function updateShop() {
   if (distanceToPlayer < 70) {
     nearShop = true;
   } else {
-    nearShop = false; // 상점에서 멀어지면 상점 닫기
+    // 상점에서 멀어져도 상점이 열려있으면 닫지 않음
+    if (!shopOpen) {
+      nearShop = false;
+    }
   }
 }
 
@@ -2435,6 +2438,12 @@ function initTouchControls() {
   spaceBtn.addEventListener('touchstart', (e) => {
     e.preventDefault();
     keys['Space'] = true;
+    
+    // 상점 근처에서 스페이스 터치 시 상점 열기
+    if (nearShop && !shopOpen) {
+      shopOpen = true;
+      hideMobileControls();
+    }
   });
   
   spaceBtn.addEventListener('touchend', (e) => {
@@ -2476,6 +2485,12 @@ function initTouchControls() {
   spaceBtn.addEventListener('mousedown', (e) => {
     e.preventDefault();
     keys['Space'] = true;
+    
+    // 상점 근처에서 스페이스 클릭 시 상점 열기
+    if (nearShop && !shopOpen) {
+      shopOpen = true;
+      hideMobileControls();
+    }
   });
   
   spaceBtn.addEventListener('mouseup', (e) => {
