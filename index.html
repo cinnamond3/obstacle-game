@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <title>장애물 피하기 게임</title>
+  <style>
+    body { 
+      background: #222; 
+      margin: 0; 
+      overflow: hidden; 
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+    }
+    canvas { 
+      display: block; 
+      background: #fff; 
+      border: 2px solid #333; 
+      max-width: 100vw;
+      max-height: 100vh;
+    }
+  </style>
+</head>
+<body>
+  <canvas id="gameCanvas"></canvas>
+  
+  <!-- 모바일 컨트롤 -->
+  <div class="touch-controls" style="display: none;">
+    <!-- 왼쪽 컨트롤 (이동) -->
+    <div class="left-controls">
+      <button id="leftBtn" class="control-btn">←</button>
+      <button id="rightBtn" class="control-btn">→</button>
+    </div>
+    <!-- 오른쪽 컨트롤 (점프/액션) -->
+    <div class="right-controls">
+      <button id="spaceBtn" class="control-btn space-btn">SPACE</button>
+    </div>
+  </div>
+  
+  <!-- 추가 컨트롤 버튼들 -->
+  <div class="extra-controls">
+    <button id="swapBtn" class="control-btn">⇄</button>
+    <button id="musicBtn" class="control-btn">🎵</button>
+  </div>
+  
+  <!-- 모바일 안내 메시지 -->
+  <div class="mobile-instructions" style="display: none;">
+    <p>스페이스바로 상점을 열 수 있습니다.</p>
+    <p>하단 중앙의 ⇄ 버튼으로 컨트롤 위치를 바꿀 수 있습니다.</p>
+    <p>하단 중앙의 🎵 버튼으로 음악을 켜고 끌 수 있습니다.</p>
+  </div>
+  
+  <style>
+    .touch-controls {
+      position: fixed;
+      bottom: 30px;
+      left: 0;
+      right: 0;
+      display: flex;
+      justify-content: space-between;
+      padding: 0 20px;
+      z-index: 1000;
+    }
+    
+    .left-controls {
+      display: flex;
+      gap: 15px;
+    }
+    
+    .right-controls {
+      display: flex;
+      gap: 15px;
+    }
+    
+    .control-btn {
+      width: 80px;
+      height: 80px;
+      background: rgba(0, 0, 0, 0.7);
+      color: white;
+      border: 3px solid #fff;
+      border-radius: 15px;
+      font-size: 28px;
+      font-weight: bold;
+      cursor: pointer;
+      user-select: none;
+      -webkit-user-select: none;
+      -webkit-touch-callout: none;
+    }
+    
+    .extra-controls .control-btn {
+      width: 80px;
+      height: 80px;
+      font-size: 28px;
+    }
+    
+    .space-btn {
+      width: 160px;
+      font-size: 20px;
+    }
+    
+    .control-btn:active {
+      background: rgba(255, 255, 255, 0.3);
+    }
+    
+    .mobile-instructions {
+      position: fixed;
+      top: 30px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(0, 0, 0, 0.8);
+      color: white;
+      padding: 10px 20px;
+      border-radius: 10px;
+      text-align: center;
+      z-index: 1000;
+    }
+    
+    .mobile-instructions p {
+      margin: 5px 0;
+      font-size: 14px;
+    }
+    
+    .extra-controls {
+      position: fixed;
+      bottom: 30px;
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      gap: 15px;
+      z-index: 1001;
+    }
+    
+    /* 데스크톱에서 음악 버튼만 표시할 때 */
+    @media (min-width: 769px) {
+      .extra-controls {
+        bottom: 20px;
+      }
+      
+      .extra-controls #swapBtn {
+        display: none;
+      }
+    }
+    
+    .music-btn.muted {
+      opacity: 0.5;
+    }
+  </style>
+  
+  <script src="game.js"></script>
+</body>
+</html> 
